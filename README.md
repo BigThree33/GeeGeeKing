@@ -1,46 +1,93 @@
 # GeeGeeKing
 
-一个桌面端待办小工具，2D 像素风格，支持置顶在屏幕最上层。
+![status](https://img.shields.io/badge/status-in%20development-orange?style=flat-square)
+![platform](https://img.shields.io/badge/platform-Windows-0078D6?style=flat-square)
+![Tauri](https://img.shields.io/badge/Tauri-2-24C8DB?style=flat-square&logo=tauri&logoColor=white)
+![React](https://img.shields.io/badge/React-TypeScript-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)
 
-## 功能范围（已确定）
+> 一个 2D 像素风的桌面待办小工具。每一条待办都是一根木头：截止时间越近，火烧得越旺；逾期化为灰烬，完成后浇水，让它重新长出新芽。
 
-- 只有一个功能：新增待办事项。
-- 每个事项只有两个字段：事项名称、截止时间。
+项目目前处于开发准备阶段，尚未发布安装包。已经确定的产品范围见 [PRD.md](PRD.md)，尚未确认的问题也集中记录在那里。
+
+## 动画风格
+
+默认风格是**燃烧的木头**：事项名称直接显示在木头上，动画也直接作用在木头上。
+
+| 状态 | 表现 |
+| --- | --- |
+| 不急 | 普通木头，带着微风嫩叶和漂浮光尘 |
+| 急 | 木头上的火焰变大，火星四溅 |
+| 急死了 | 整根木头猛烈燃烧，火花与爆裂星芒加剧 |
+| 逾期 | 火焰熄灭，木头变成焦木与灰烬 |
+| 浇水 | 水浇灭火焰，蒸汽升起 |
+| 完成 | 灭火之后长出绿芽与小花 |
+
+### 素材雪碧图
+
+下面直接展示当前 V4 木头素材的原始雪碧图。每张 PNG 包含 12 帧，静态展示的是完整帧序列。GitHub 不会直接运行 HTML；把素材包下载到本地后，双击 [preview.html](GeeGeeKing-wood-v4/preview.html) 用浏览器打开，即可查看动画，并点击木头体验「浇水 → 绿芽」。
+
+| 状态 | 雪碧图 |
+| --- | --- |
+| 不急 | ![不急：普通木头与嫩叶](GeeGeeKing-wood-v4/sprites/calm.png) |
+| 急 | ![急：暖焰与火星](GeeGeeKing-wood-v4/sprites/urgent.png) |
+| 急死了 | ![急死了：烈焰与爆裂火花](GeeGeeKing-wood-v4/sprites/critical.png) |
+| 逾期 | ![逾期：焦木与灰烬](GeeGeeKing-wood-v4/sprites/overdue.png) |
+| 浇水 | ![浇水：灭火与蒸汽](GeeGeeKing-wood-v4/sprites/watering.png) |
+| 完成 | ![完成：绿芽与小花](GeeGeeKing-wood-v4/sprites/done.png) |
+
+## 功能范围
+
+- 只做一件事：新增待办事项。
+- 每条事项只有两个字段：事项名称、截止时间。
 - 事项按截止时间排序展示。
-- 桌面端工具，窗口可置顶在屏幕之上。
-- 视觉风格为 2D 像素风。
-- 每个事项有多种紧迫度状态（不急、急、急死了等），根据截止时间的紧迫程度展示不同的 2D 动画效果。
+- 根据剩余时间切换紧迫度状态，不同状态播放不同的 2D 像素动画。
+- 支持窗口置顶，让待办始终显示在其他窗口上方。
+- 数据只保存在当前电脑上，不登录、不联网、不做多设备同步。
 
-## 动画方案
+## 后续风格
 
-### 默认风格（已确定）
+以下方向已经确定，但当前版本不实现：
 
-每个事项是一根木头，事项名称叠加显示在木头上，所有动画都直接作用在这根木头上：
-
-- 木头 + 多种程度的燃烧火焰：按截止时间的紧迫程度，展示不同大小的火焰。
-- 逾期：熄灭，变成灰烬。
-- 完成：浇水，之后长出绿芽。
-
-### 后续风格（方向已确定，暂不实现）
-
-- **引线炸弹**：引线随剩余时间变短，等于把倒计时直接画出来；急死了时末端火花狂闪；完成就是剪刀剪断引线。
-- **头上着火的小人**：不急时睡觉冒 Zzz，急时快步走，急死了时头顶着火狂奔；完成后擦汗、喝水、躺下。
-- **冰块融化**：越接近截止化得越多，急死了时只剩一小块在晃；完成后反而冻回一个冰雕，有反差感。
+- **引线炸弹**：引线随剩余时间变短，急死了时末端火花狂闪；完成就是剪断引线。
+- **头上着火的小人**：不急时睡觉冒 Zzz，急时快步走，急死了时头顶着火狂奔；完成后擦汗喝水。
+- **冰块融化**：越接近截止化得越多，急死了时只剩一小块在晃；完成后重新冻成冰雕。
 - **蜡烛**：随时间真的烧短，急死了时火苗狂闪将灭。
 - **气球**：不断充气变大，逾期时爆掉。
 
-## 技术栈（已确定）
+## 技术栈
 
 | 用途 | 选择 | 说明 |
-|---|---|---|
-| 桌面端框架 | Tauri 2 | 负责窗口置顶、无边框窗口等桌面能力 |
-| 前端框架 | React + TypeScript + Vite | 界面和动画都在前端实现 |
-| 数据存储 | 本地 JSON 文件 | 数据只保存在当前电脑上，无后端、无账号、无多设备同步 |
+| --- | --- | --- |
+| 桌面端框架 | Tauri 2 | 窗口置顶、无边框窗口等桌面能力 |
+| 前端框架 | React + TypeScript + Vite | 界面与动画都在前端实现 |
+| 数据存储 | 本地 JSON 文件 | 数据只保存在当前电脑上 |
 
-## 待定
+应用标识为 `com.gegeeking.app`，显示名称为 `GeeGeeKing`。最终产物是 Windows 安装包，不需要部署服务器。
 
-以下内容尚未确定，确定后再补充到这里：
+## 开发
 
-- 默认风格各状态的具体动画效果与素材来源。
-- 紧迫度状态的时间阈值：剩余多久算「急」、多久算「急死了」。
-- 动画实现方式、像素字体、文字样式：看过候选 demo 后再确定。
+工程初始化后，需要准备以下环境：
+
+- Windows 10 / 11
+- Node.js 与 npm
+- Rust（rustup）
+- Visual Studio C++ 生成工具
+- WebView2 运行时（Windows 11 已内置）
+
+```bash
+npm install
+npm run tauri dev
+```
+
+打包安装包：
+
+```bash
+npm run tauri build
+```
+
+## 项目文档
+
+- [PRD.md](PRD.md)：产品需求、已确定的功能、待确认的问题。
+- [GeeGeeKing-wood-v4/README.md](GeeGeeKing-wood-v4/README.md)：木头素材说明与接入示例。
+- [GeeGeeKing-wood-v4/preview.html](GeeGeeKing-wood-v4/preview.html)：可离线打开的木头动画预览。

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GeeGeeKing V4 木头动画离线预览</title>
+  <link rel="stylesheet" href="./src/styles/wood-theme-v4.css" />
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #1b1620;
+      color: #f5efe6;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 16px;
+      gap: 18px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      color: #ffe94d;
+      letter-spacing: 1px;
+    }
+    .hint {
+      margin: 0;
+      font-size: 13px;
+      color: #b7adb8;
+    }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      background: #33273a;
+      color: #ffe94d;
+      border: 2px solid #594366;
+      padding: 6px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    button:hover {
+      background: #463550;
+    }
+    .widget-box {
+      background: rgba(24, 18, 28, 0.9);
+      border: 2px solid #4a374f;
+      border-radius: 10px;
+      padding: 16px 14px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    }
+  </style>
+</head>
+<body>
+  <h1>GeeGeeKing V4 柔焰焦木版 · 离线雪碧图预览</h1>
+  <p class="hint">点击任意未完成的木头，可体验「浇水灭火 → 长出绿芽」连贯动画；上方按钮可切换 2x / 3x 整数倍像素缩放。</p>
+
+  <div class="toolbar">
+    <button onclick="document.documentElement.style.setProperty('--pixel-scale', 3)">3x 标准模式 (336×132)</button>
+    <button onclick="document.documentElement.style.setProperty('--pixel-scale', 2)">2x 紧凑模式 (224×88)</button>
+    <button onclick="location.reload()">重置演示状态</button>
+  </div>
+
+  <div class="widget-box">
+    <div class="wood-list" id="demo-list"></div>
+  </div>
+
+  <script>
+    const ITEMS = [
+      { state: "critical", badge: "急死了", title: "修复线上严重 Bug！", time: "11-24 19:00" },
+      { state: "urgent",   badge: "急",     title: "完成产品评审 PPT",   time: "11-25 10:00" },
+      { state: "calm",     badge: "不急",   title: "整理下周迭代排期",   time: "11-28 18:00" },
+      { state: "overdue",  badge: "灰烬",   title: "提交昨日工作日报",   time: "11-23 18:00" },
+      { state: "done",     badge: "DONE",   title: "本周周报已发送",     time: "11-24 09:00" },
+    ];
+
+    const listEl = document.getElementById("demo-list");
+
+    ITEMS.forEach((item) => {
+      const card = document.createElement("div");
+      card.className = "wood-card";
+      card.dataset.state = item.state;
+
+      const img = document.createElement("img");
+      img.className = "wood-sprite";
+      img.src = `./sprites/${item.state}.png`;
+      img.draggable = false;
+
+      const overlay = document.createElement("div");
+      overlay.className = "wood-overlay";
+      overlay.innerHTML = `
+        <div class="wood-title-row">
+          <span class="arcade-badge">${item.badge}</span>
+          <span class="arcade-title">${item.title}</span>
+        </div>
+        <div class="arcade-deadline">${item.time}</div>
+      `;
+
+      card.appendChild(img);
+      card.appendChild(overlay);
+
+      card.addEventListener("click", () => {
+        if (card.dataset.state === "done" || card.dataset.state === "watering") return;
+        card.dataset.state = "watering";
+        img.src = "./sprites/watering.png";
+        overlay.querySelector(".arcade-badge").textContent = "浇水中";
+
+        img.addEventListener(
+          "animationend",
+          () => {
+            if (card.dataset.state === "watering") {
+              card.dataset.state = "done";
+              img.src = "./sprites/done.png";
+              overlay.querySelector(".arcade-badge").textContent = "DONE";
+            }
+          },
+          { once: true }
+        );
+      });
+
+      listEl.appendChild(card);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+/* GeeGeeKing V4 柔焰焦木版 + 热血电玩黄 像素样式 */
+
+/*
+ * 推荐下载免费可商用中文像素字体（如 Fusion Pixel 12px 或 Cubic 11），
+ * 放到 src/assets/fonts/fusion-pixel-12px.woff2 后取消下方注释即可离线生效。
+ */
+/*
+@font-face {
+  font-family: "GeePixel";
+  src: url("../assets/fonts/fusion-pixel-12px.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+*/
+
+:root {
+  /* 必须使用整数倍缩放以保持像素硬边：3 => 336x132，紧凑模式改为 2 => 224x88 */
+  --pixel-scale: 3;
+  --frame-w: 112px;
+  --frame-h: 44px;
+  --sprite-frames: 12;
+  --gee-font: "GeePixel", "Fusion Pixel 12px Proportional zh_hans", "Cubic 11", "Zpix", "Press Start 2P", monospace;
+}
+
+.wood-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 4px;
+}
+
+/* 单条待办木头容器 */
+.wood-card {
+  position: relative;
+  width: calc(var(--frame-w) * var(--pixel-scale));
+  height: calc(var(--frame-h) * var(--pixel-scale));
+  overflow: hidden;
+  user-select: none;
+  cursor: pointer;
+  margin-top: calc(-5px * var(--pixel-scale));
+  transition: transform 0.1s steps(2, end);
+}
+
+.wood-card:first-child {
+  margin-top: 0;
+}
+
+.wood-card:hover:not([data-state="done"]):not([data-state="watering"]) {
+  transform: translateY(-2px);
+}
+
+.wood-card:active:not([data-state="done"]):not([data-state="watering"]) {
+  transform: translateY(1px);
+}
+
+/* 雪碧图本体：12 帧横向无缝循环，纯 GPU translate3d */
+.wood-sprite {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(var(--frame-w) * var(--sprite-frames) * var(--pixel-scale));
+  height: 100%;
+  max-width: none;
+  pointer-events: none;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  will-change: transform;
+  animation: wood-loop-12 1.5s steps(12, end) infinite;
+}
+
+/* 急死了：稍快帧率 (10 FPS) 强化火花溅射紧迫感 */
+.wood-card[data-state="critical"] .wood-sprite {
+  animation-duration: 1.2s;
+}
+
+/* 逾期焦木：更慢更沉静 (6 FPS) */
+.wood-card[data-state="overdue"] .wood-sprite {
+  animation-duration: 2.0s;
+}
+
+/* 浇水过渡：单次播放，停在第 12 帧避免切图闪白 */
+.wood-card[data-state="watering"] .wood-sprite {
+  animation: wood-oneshot-12 1.15s steps(11, end) 1 forwards;
+}
+
+@keyframes wood-loop-12 {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-100%, 0, 0);
+  }
+}
+
+@keyframes wood-oneshot-12 {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(calc(-100% * 11 / 12), 0, 0);
+  }
+}
+
+/* 文字叠加区：精准落在木头本体上（避开左侧年轮切面与顶部火焰/花朵） */
+.wood-overlay {
+  position: absolute;
+  left: calc(18px * var(--pixel-scale));
+  right: calc(8px * var(--pixel-scale));
+  top: calc(19px * var(--pixel-scale));
+  height: calc(20px * var(--pixel-scale));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(1.5px * var(--pixel-scale));
+  pointer-events: none;
+}
+
+.wood-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* 热血电玩黄：高饱和电玩黄 + 8向深咖硬描边 + 橙红街机厚底影（不受木头/火焰/焦炭吃色） */
+.arcade-title {
+  font-family: var(--gee-font);
+  font-size: calc(6px * var(--pixel-scale));
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: 1px;
+  color: #ffe94d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow:
+    -2px  0   0 #24110e,
+     2px  0   0 #24110e,
+     0   -2px 0 #24110e,
+     0    2px 0 #24110e,
+    -2px -2px 0 #24110e,
+     2px -2px 0 #24110e,
+    -2px  2px 0 #24110e,
+     2px  2px 0 #24110e,
+     0    4px 0 #b83a14,
+     2px  4px 0 #190907;
+}
+
+.arcade-deadline {
+  font-family: var(--gee-font);
+  font-size: calc(3.8px * var(--pixel-scale));
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  color: #fff6c9;
+  text-shadow:
+    -1px  0   0 #24110e,
+     1px  0   0 #24110e,
+     0   -1px 0 #24110e,
+     0    1px 0 #24110e,
+     1px  2px 0 #190907;
+}
+
+/* 二次元像素倾斜状态印章 */
+.arcade-badge {
+  flex-shrink: 0;
+  font-family: var(--gee-font);
+  font-size: calc(3.3px * var(--pixel-scale));
+  font-weight: 900;
+  line-height: 1;
+  padding: 2px 5px;
+  transform: skewX(-10deg);
+  border: 2px solid #24110e;
+  box-shadow: 2px 2px 0 #190907;
+}
+
+.wood-card[data-state="calm"] .arcade-badge {
+  background: #67c25a;
+  color: #fffde6;
+}
+
+.wood-card[data-state="urgent"] .arcade-badge {
+  background: #f59b34;
+  color: #24110e;
+}
+
+.wood-card[data-state="critical"] .arcade-badge {
+  background: #d63b28;
+  color: #ffe94d;
+}
+
+.wood-card[data-state="overdue"] .arcade-badge {
+  background: #4a3b36;
+  color: #d8c8b8;
+}
+
+.wood-card[data-state="watering"] .arcade-badge {
+  background: #4bb5f0;
+  color: #ffffff;
+}
+
+.wood-card[data-state="done"] .arcade-badge {
+  background: #92e655;
+  color: #1f3d1d;
+}
+
+/* 逾期状态：保留可读性，文字略微退饱和并加删除线呼应焦炭 */
+.wood-card[data-state="overdue"] .arcade-title {
+  color: #d6c89a;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-shadow:
+    -2px  0   0 #1a1312,
+     2px  0   0 #1a1312,
+     0   -2px 0 #1a1312,
+     0    2px 0 #1a1312,
+     0    3px 0 #0f0b0b;
+}
+
+/* 完成状态：微调为清新亮芽黄，带治愈感 */
+.wood-card[data-state="done"] .arcade-title {
+  color: #ebff75;
+  text-shadow:
+    -2px  0   0 #1f381c,
+     2px  0   0 #1f381c,
+     0   -2px 0 #1f381c,
+     0    2px 0 #1f381c,
+    -2px -2px 0 #1f381c,
+     2px -2px 0 #1f381c,
+    -2px  2px 0 #1f381c,
+     2px  2px 0 #1f381c,
+     0    4px 0 #3f8a36,
+     2px  4px 0 #132411;
+}
