@@ -1,0 +1,216 @@
+:root {
+  color-scheme: dark;
+  font: 0.875rem/1.45 "Microsoft YaHei UI", "Segoe UI", sans-serif;
+  color: #f9e8c6;
+  background: #21191b;
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+}
+
+.app {
+  box-sizing: border-box;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0.875rem 1rem 0;
+  background: radial-gradient(ellipse at top, #352529, #21191b 70%);
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.app-header h1 {
+  margin: 0;
+  color: #ffe29e;
+  font-size: 1.25rem;
+  letter-spacing: 0.095em;
+}
+
+.pin-button,
+.retry-button {
+  padding: 0.3rem 0.65rem;
+  border: 0.0625rem solid #785d4e;
+  border-radius: 0.25rem;
+  color: #e7c7a5;
+  background: #2b2022;
+}
+
+.pin-button[aria-pressed="true"] {
+  border-color: #af7846;
+  color: #ffe3a2;
+  background: #4b3326;
+}
+
+.pin-button:hover,
+.retry-button:hover {
+  border-color: #ffbd73;
+}
+
+.todo-form fieldset {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0.625rem;
+  border: 0.0625rem solid #63493f;
+  border-radius: 0.375rem;
+  background: #302326;
+}
+
+.todo-form label {
+  color: #e6c6a9;
+  font-size: 0.75rem;
+}
+
+.todo-form label[for="todo-deadline"] {
+  margin-top: 0.25rem;
+}
+
+.todo-form input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 2rem;
+  padding: 0 0.4rem;
+  border: 0.0625rem solid #70574d;
+  border-radius: 0.25rem;
+  background: #21191b;
+  color: #f9e8c6;
+}
+
+.todo-form input::placeholder {
+  color: #bda295;
+}
+
+.deadline-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.375rem;
+}
+
+.add-button {
+  padding: 0 0.5rem;
+  border: 0.0625rem solid #d68f52;
+  border-radius: 0.25rem;
+  color: #2e190f;
+  background: #ffc073;
+  font-weight: 700;
+}
+
+.add-button:hover:not(:disabled) {
+  background: #ffd293;
+}
+
+.todo-form fieldset:disabled {
+  opacity: 0.7;
+}
+
+button:focus-visible,
+.todo-form input:focus-visible {
+  outline: 0.125rem solid #ffd293;
+  outline-offset: 0.125rem;
+}
+
+.todo-list {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  margin-top: 0.625rem;
+  scrollbar-width: thin;
+  scrollbar-color: #755648 transparent;
+}
+
+.message {
+  margin: 0.75rem 0;
+  color: #e2c1a4;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.message.error {
+  margin: 0.5rem 0 0;
+  color: #ffb4a0;
+  font-size: 0.8125rem;
+  text-align: left;
+}
+
+.retry-button {
+  display: block;
+  margin: 0.75rem auto;
+}
+
+.wood-list {
+  /* 保持素材的整数倍放大，默认窗口可容纳三条 224×88 的木头。 */
+  --frame-w: 7rem;
+  --frame-h: 2.75rem;
+  --pixel-scale: 2;
+  --gee-font: "Microsoft YaHei UI", "Segoe UI", sans-serif;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0.25rem 0 0.75rem;
+  list-style: none;
+}
+
+.wood-card {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.wood-card:disabled {
+  cursor: default;
+}
+
+.wood-card[data-state]:disabled:hover,
+.wood-card[data-state]:disabled:active {
+  transform: none;
+}
+
+.wood-card[data-state="overdue"] .arcade-title {
+  color: #f5e2b2;
+  text-decoration: none;
+}
+
+.arcade-deadline {
+  font-size: 0.625rem;
+}
+
+.arcade-badge {
+  font-size: 0.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wood-card {
+    transition: none;
+  }
+
+  .wood-card .wood-sprite {
+    animation: none;
+  }
+
+  .wood-card[data-state="watering"] .wood-sprite {
+    animation-duration: 0.15s;
+    animation-timing-function: step-end;
+  }
+}

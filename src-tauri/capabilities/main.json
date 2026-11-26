@@ -1,0 +1,7 @@
+{
+  "identifier": "main",
+  "windows": ["main"],
+  "permissions": [
+    "core:window:allow-set-always-on-top"
+  ]
+}
