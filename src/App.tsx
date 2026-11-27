@@ -6,7 +6,8 @@ import { preloadWoodSprites, WoodTodo } from "./WoodTodo";
 
 type TodoChange =
   | { kind: "add"; id: string; title: string; deadline: number }
-  | { kind: "complete"; id: string };
+  | { kind: "complete"; id: string }
+  | { kind: "dismiss"; id: string };
 
 export default function App() {
   // 加载完成前保持空值，防止读取失败被误认为没有待办。
@@ -20,7 +21,7 @@ export default function App() {
   // 初始值与原生窗口配置一致，切换成功后再更新按钮状态。
   const [isPinned, setIsPinned] = useState(true);
   const [isChangingPin, setIsChangingPin] = useState(false);
-  // 用一个时钟驱动整张列表，恢复窗口焦点时立即刷新紧迫度。
+  // 用一个时钟刷新紧迫度和日期，恢复窗口焦点时立即更新。
   const [now, setNow] = useState(Date.now);
 
   async function loadTodos() {
@@ -52,6 +53,8 @@ export default function App() {
     setError("");
     try {
       setTodos(await invoke<TodoItem[]>("update_todos", { change }));
+      // 保存可能跨过午夜，同步日期，避免刚完成的木头短暂消失。
+      setNow(Date.now());
       return true;
     } catch (reason) {
       setError(String(reason));
@@ -93,8 +96,16 @@ export default function App() {
     }
   }
 
-  // 按截止时间统一排序，浇水和完成时保留木头的位置。
-  const sortedTodos = todos && [...todos].sort((a, b) => a.deadline - b.deadline);
+  // 按本机日期判断绿芽归属，旧版缺少完成时间的记录归入历史。
+  const today = new Date(now).toDateString();
+  const visibleTodos = todos
+    ?.filter((todo) => {
+      if (todo.dismissed) return false;
+      if (!todo.completed) return true;
+      return todo.completedAt !== undefined && new Date(todo.completedAt).toDateString() === today;
+    })
+    // 统一按截止时间排序，浇水和完成时保留木头的位置。
+    .sort((a, b) => a.deadline - b.deadline);
 
   return (
     <main className="app">
@@ -143,16 +154,17 @@ export default function App() {
         {!isLoading && todos === null && (
           <button className="retry-button" type="button" onClick={loadTodos}>重新读取</button>
         )}
-        {sortedTodos?.length === 0 && <p className="message">木堆还是空的，添加第一条待办吧。</p>}
-        {sortedTodos && sortedTodos.length > 0 && (
+        {visibleTodos?.length === 0 && <p className="message">今天的木堆是空的，添加一条待办吧。</p>}
+        {visibleTodos && visibleTodos.length > 0 && (
           <ul className="wood-list">
-            {sortedTodos.map((todo) => (
-              <li key={todo.id}>
+            {visibleTodos.map((todo) => (
+              <li className="wood-item" key={todo.id}>
                 <WoodTodo
                   todo={todo}
                   now={now}
                   isSaving={isSaving}
                   onComplete={(id) => saveChange({ kind: "complete", id })}
+                  onDismiss={(id) => saveChange({ kind: "dismiss", id })}
                 />
               </li>
             ))}

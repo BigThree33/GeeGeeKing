@@ -26,9 +26,10 @@ interface WoodTodoProps {
   now: number;
   isSaving: boolean;
   onComplete: (id: string) => Promise<boolean>;
+  onDismiss: (id: string) => Promise<boolean>;
 }
 
-export function WoodTodo({ todo, now, isSaving, onComplete }: WoodTodoProps) {
+export function WoodTodo({ todo, now, isSaving, onComplete, onDismiss }: WoodTodoProps) {
   // 保存成功后播放一次浇水过渡，动画结束才切换到长芽雪碧图。
   const [isWatering, setIsWatering] = useState(false);
   const state = isWatering ? "watering" : getTodoState(todo, now);
@@ -36,31 +37,41 @@ export function WoodTodo({ todo, now, isSaving, onComplete }: WoodTodoProps) {
   const label = `${todo.title}，截止 ${deadline}，${STATE_LABELS[state]}`;
 
   return (
-    <button
-      className="wood-card"
-      data-state={state}
-      type="button"
-      disabled={isSaving || isWatering || todo.completed}
-      aria-label={todo.completed ? label : `${label}，点击完成`}
-      title={todo.completed ? label : `${label} · 点击浇水完成`}
-      onClick={async () => {
-        if (await onComplete(todo.id)) setIsWatering(true);
-      }}
-    >
-      <img
-        src={sprites[state]}
-        className="wood-sprite"
-        alt=""
-        draggable={false}
-        onAnimationEnd={() => setIsWatering(false)}
-      />
-      <span className="wood-overlay">
-        <span className="wood-title-row">
-          <span className="arcade-badge">{STATE_LABELS[state]}</span>
-          <span className="arcade-title">{todo.title}</span>
+    <>
+      <button
+        className="wood-card"
+        data-state={state}
+        type="button"
+        disabled={isSaving || isWatering || todo.completed}
+        aria-label={todo.completed ? label : `${label}，点击完成`}
+        title={todo.completed ? label : `${label} · 点击浇水完成`}
+        onClick={async () => {
+          if (await onComplete(todo.id)) setIsWatering(true);
+        }}
+      >
+        <img
+          src={sprites[state]}
+          className="wood-sprite"
+          alt=""
+          draggable={false}
+          onAnimationEnd={() => setIsWatering(false)}
+        />
+        <span className="wood-overlay">
+          <span className="wood-title-row">
+            <span className="arcade-badge">{STATE_LABELS[state]}</span>
+            <span className="arcade-title">{todo.title}</span>
+          </span>
+          <time className="arcade-deadline" dateTime={new Date(todo.deadline).toISOString()}>{deadline}</time>
         </span>
-        <time className="arcade-deadline" dateTime={new Date(todo.deadline).toISOString()}>{deadline}</time>
-      </span>
-    </button>
+      </button>
+      <button
+        className="wood-dismiss"
+        type="button"
+        disabled={isSaving}
+        aria-label={`关闭待办：${todo.title}`}
+        title="关闭这根木头"
+        onClick={() => void onDismiss(todo.id)}
+      />
+    </>
   );
 }

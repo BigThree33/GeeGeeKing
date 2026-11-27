@@ -12,6 +12,10 @@ export interface TodoItem {
   /** 截止时间（毫秒时间戳） */
   deadline: number;
   completed: boolean;
+  /** 完成时间（毫秒时间戳），供每日木堆判断绿芽归属。 */
+  completedAt?: number;
+  /** 手动关闭的木头保存在本地，之后不再出现在木堆。 */
+  dismissed?: boolean;
 }
 
 export const STATE_LABELS: Record<WoodState, string> = {

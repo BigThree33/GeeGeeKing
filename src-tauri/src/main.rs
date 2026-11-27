@@ -10,11 +10,17 @@ use std::{
 use tauri::{AppHandle, Manager};
 
 #[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 struct Todo {
     id: String,
     title: String,
     deadline: u64,
     completed: bool,
+    // 旧版没有完成时间，读取时保留空值，不把旧记录误算为当天完成。
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    completed_at: Option<u64>,
+    #[serde(default)]
+    dismissed: bool,
 }
 
 #[derive(Deserialize)]
@@ -28,6 +34,16 @@ enum TodoChange {
     Complete {
         id: String,
     },
+    Dismiss {
+        id: String,
+    },
+}
+
+fn current_time_millis() -> Result<u64, String> {
+    let elapsed = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|error| format!("无法读取系统时间：{error}"))?;
+    u64::try_from(elapsed.as_millis()).map_err(|error| format!("系统时间超出范围：{error}"))
 }
 
 fn todos_path(app: &AppHandle) -> Result<PathBuf, String> {
@@ -70,7 +86,10 @@ fn list_todos(app: AppHandle) -> Result<Vec<Todo>, String> {
 
 #[tauri::command]
 fn update_todos(app: AppHandle, change: TodoChange) -> Result<Vec<Todo>, String> {
-    let path = todos_path(&app)?;
+    update_todos_at(&todos_path(&app)?, change)
+}
+
+fn update_todos_at(path: &Path, change: TodoChange) -> Result<Vec<Todo>, String> {
     let dir = path.parent().ok_or("无法定位待办文件夹")?;
     fs::create_dir_all(dir).map_err(|error| format!("无法创建待办文件夹：{error}"))?;
 
@@ -84,7 +103,7 @@ fn update_todos(app: AppHandle, change: TodoChange) -> Result<Vec<Todo>, String>
     lock.lock()
         .map_err(|error| format!("无法锁定待办：{error}"))?;
 
-    let mut todos = read_todos(&path)?;
+    let mut todos = read_todos(path)?;
     match change {
         TodoChange::Add {
             id,
@@ -95,10 +114,7 @@ fn update_todos(app: AppHandle, change: TodoChange) -> Result<Vec<Todo>, String>
             if title.is_empty() {
                 return Err("请输入事项名称".into());
             }
-            let now = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .map_err(|error| format!("无法读取系统时间：{error}"))?;
-            if u128::from(deadline) <= now.as_millis() || deadline > 8_640_000_000_000_000 {
+            if deadline <= current_time_millis()? || deadline > 8_640_000_000_000_000 {
                 return Err("截止时间必须晚于当前时间".into());
             }
             if todos.iter().any(|todo| todo.id == id) {
@@ -109,6 +125,8 @@ fn update_todos(app: AppHandle, change: TodoChange) -> Result<Vec<Todo>, String>
                 title: title.into(),
                 deadline,
                 completed: false,
+                completed_at: None,
+                dismissed: false,
             });
         }
         TodoChange::Complete { id } => {
@@ -119,10 +137,22 @@ fn update_todos(app: AppHandle, change: TodoChange) -> Result<Vec<Todo>, String>
             if todo.completed {
                 return Ok(todos);
             }
+            todo.completed_at = Some(current_time_millis()?);
             todo.completed = true;
         }
+        TodoChange::Dismiss { id } => {
+            let todo = todos
+                .iter_mut()
+                .find(|todo| todo.id == id)
+                .ok_or("找不到这条待办")?;
+            if todo.dismissed {
+                return Ok(todos);
+            }
+            // 关闭仅影响木堆展示，保留待办及其原有完成状态。
+            todo.dismissed = true;
+        }
     }
-    save_todos(&path, &todos)?;
+    save_todos(path, &todos)?;
     Ok(todos)
 }
 
@@ -131,4 +161,53 @@ fn main() {
         .invoke_handler(tauri::generate_handler![list_todos, update_todos])
         .run(tauri::generate_context!())
         .expect("无法启动 GeeGeeKing");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn updates_legacy_todos_without_inventing_completion_dates() {
+        let path = std::env::temp_dir().join(format!(
+            "geegeeking-todos-{}-{}.json",
+            std::process::id(),
+            current_time_millis().unwrap()
+        ));
+        fs::write(
+            &path,
+            r#"[
+                {"id":"legacy","title":"Legacy","deadline":1,"completed":true},
+                {"id":"pending","title":"Pending","deadline":2,"completed":false}
+            ]"#,
+        )
+        .unwrap();
+
+        let todos = update_todos_at(
+            &path,
+            TodoChange::Complete {
+                id: "legacy".into(),
+            },
+        )
+        .unwrap();
+        assert_eq!(todos[0].completed_at, None);
+        assert!(!todos[1].dismissed);
+
+        let complete = serde_json::from_str(r#"{"kind":"complete","id":"pending"}"#).unwrap();
+        let todos = update_todos_at(&path, complete).unwrap();
+        let completed_at = todos[1].completed_at.unwrap();
+        assert!(completed_at > 0);
+
+        let dismiss = serde_json::from_str(r#"{"kind":"dismiss","id":"pending"}"#).unwrap();
+        update_todos_at(&path, dismiss).unwrap();
+
+        let stored: serde_json::Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+        assert!(stored[0].get("completedAt").is_none());
+        assert_eq!(stored[1]["completed"], true);
+        assert_eq!(stored[1]["completedAt"], completed_at);
+        assert_eq!(stored[1]["dismissed"], true);
+
+        fs::remove_file(&path).unwrap();
+        fs::remove_file(path.with_extension("lock")).unwrap();
+    }
 }
